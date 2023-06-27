@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useGetUserID } from "../hooks/useGetUserID";
 import axios from "axios";
+import { useCookies } from "react-cookie";
 
 export const Home = () => {
   const [recipes, setRecipes] = useState([]);
   const [savedRecipes, setSavedRecipes] = useState([]);
-
+  const [cookies, _] = useCookies(["access_token"]); 
   const userID = useGetUserID();
 
   useEffect(() => {
@@ -30,6 +31,8 @@ export const Home = () => {
     };
 
     fetchRecipes();
+
+    if (cookies.access_token)
     fetchSavedRecipes();
   }, []);
 
@@ -38,7 +41,7 @@ export const Home = () => {
       const response = await axios.put("http://localhost:3001/recipes", {
         recipeID,
         userID,
-      });
+      }, {headers: {authorization: cookies.access_token}});
       setSavedRecipes(response.data.savedRecipes);
     } catch (err) {
       console.log(err);
@@ -63,7 +66,16 @@ export const Home = () => {
               </button>
             </div>
             <div className="instructions">
+            <h2>Instructions</h2>
               <p>{recipe.instructions}</p>
+            </div>
+            <div className="ingredients">
+            <h2>Ingredients</h2>
+             <ul>
+            {recipe.ingredients.map((ingredient, index) => (
+            <li key={index}>{ingredient}</li>
+            ))}
+             </ul>
             </div>
             <img src={recipe.imageUrl} alt={recipe.name} />
             <p>Cooking Time: {recipe.cookingTime} minutes</p>
